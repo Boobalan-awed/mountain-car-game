@@ -29,6 +29,7 @@ let playerName = localStorage.getItem('mcName') || 'Player';
 let onlineCount = 1;
 let sendCounter = 0;
 let gameMode = 'single'; // 'single' or 'multi'
+let multiplayerMode = 'race'; // 'race', 'jump', 'demo'
 let currentRoomCode = null;
 
 // ===== CONTROLS =====
@@ -38,8 +39,8 @@ let brakePressed = false;
 // ===== CAMERA =====
 const camera = { x: 0, y: 0 };
 let zoomLevel = 1;
-const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 1.5;
+const ZOOM_MIN = 0.75;
+const ZOOM_MAX = 1.4;
 let spectatingId = null;
 let isSpectating = false;
 
@@ -842,7 +843,7 @@ function shadeColor(hex, percent) {
 }
 
 // ===== GAME FLOW =====
-const allScreens = ['menuScreen','vehicleScreen','lobbyScreen','joinScreen','roomScreen','gameOverScreen'];
+const allScreens = ['menuScreen','gameModeScreen','vehicleScreen','lobbyScreen','joinScreen','roomScreen','gameOverScreen'];
 function hideAllScreens() { allScreens.forEach(s => document.getElementById(s).classList.add('hidden')); }
 
 function resetGame() {
@@ -985,15 +986,48 @@ function addPressEvents(el, onDown, onUp) {
 addPressEvents(document.getElementById('gasBtn'), () => gasPressed = true, () => gasPressed = false);
 addPressEvents(document.getElementById('brakeBtn'), () => brakePressed = true, () => brakePressed = false);
 
+// Name editor
+document.getElementById('editNameBtn').addEventListener('click', () => {
+  document.getElementById('playerTag').classList.add('hidden');
+  document.getElementById('nameEditor').classList.remove('hidden');
+  const inp = document.getElementById('menuNameInput');
+  inp.value = playerName; inp.focus();
+});
+document.getElementById('saveNameBtn').addEventListener('click', () => {
+  const name = document.getElementById('menuNameInput').value.trim() || 'Player';
+  playerName = name; localStorage.setItem('mcName', playerName);
+  document.getElementById('menuPlayerName').textContent = playerName;
+  document.getElementById('playerNameInput').value = playerName;
+  document.getElementById('roomNameInput').value = playerName;
+  document.getElementById('nameEditor').classList.add('hidden');
+  document.getElementById('playerTag').classList.remove('hidden');
+});
+
 // Menu buttons
-document.getElementById('singlePlayerBtn').addEventListener('click', () => {
+document.getElementById('careerBtn').addEventListener('click', () => {
   gameMode = 'single'; hideAllScreens();
   document.getElementById('vehicleScreen').classList.remove('hidden');
 });
-document.getElementById('multiPlayerBtn').addEventListener('click', () => {
+document.getElementById('friendsBtn').addEventListener('click', () => {
   gameMode = 'multi'; hideAllScreens();
+  document.getElementById('gameModeScreen').classList.remove('hidden');
+});
+
+// Game mode selection
+document.getElementById('modeRaceBtn').addEventListener('click', () => {
+  multiplayerMode = 'race'; hideAllScreens();
   document.getElementById('lobbyScreen').classList.remove('hidden');
 });
+document.getElementById('modeJumpBtn').addEventListener('click', () => {
+  multiplayerMode = 'jump'; hideAllScreens();
+  document.getElementById('lobbyScreen').classList.remove('hidden');
+});
+document.getElementById('modeDemoBtn').addEventListener('click', () => {
+  multiplayerMode = 'demo'; hideAllScreens();
+  document.getElementById('lobbyScreen').classList.remove('hidden');
+});
+document.getElementById('gameModeBackBtn').addEventListener('click', showMenu);
+
 document.getElementById('startGameBtn').addEventListener('click', startGame);
 document.getElementById('vehicleBackBtn').addEventListener('click', showMenu);
 
