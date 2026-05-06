@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Mountain Car - Multiplayer hill climb racing game. Race with friends using room codes!">
+  <meta name="theme-color" content="#1a0533">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="screen-orientation" content="landscape">
+  <title>Mountain Car - Hill Climb Racing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-item"><span class="hud-icon">📏</span><span class="hud-value" id="distanceValue">0m</span></div>
+      <div class="hud-item"><span class="hud-icon">⭐</span><span class="hud-value" id="coinValue">0</span></div>
+      <div class="hud-item"><span class="hud-icon">🏆</span><span class="hud-value" id="bestValue">0m</span></div>
+      <div class="hud-item online-indicator" id="onlineDisplay" style="display:none">
+        <span class="hud-icon">👥</span><span class="hud-value" id="onlineValue">1</span>
+      </div>
+    </div>
+    <div class="fuel-container">
+      <div class="fuel-icon">⛽</div>
+      <div class="fuel-bar-bg"><div class="fuel-bar" id="fuelBar"></div></div>
+    </div>
+    <div class="room-code-hud" id="roomCodeHud" style="display:none">
+      <span>🔗</span> <span id="hudRoomCode"></span>
+    </div>
+    <div class="hud-bottom">
+      <button id="brakeBtn" class="control-btn brake-btn"><span class="btn-label">BRAKE</span></button>
+      <div class="speed-display">
+        <div class="speed-value" id="speedValue">0</div>
+        <div class="speed-unit">KM/H</div>
+      </div>
+      <button id="gasBtn" class="control-btn gas-btn"><span class="btn-label">GAS</span></button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN MENU ===== -->
+  <div id="menuScreen">
+    <div class="menu-content">
+      <h1 class="game-title">
+        <span class="title-mountain">MOUNTAIN</span>
+        <span class="title-car">CAR</span>
+      </h1>
+      <p class="game-subtitle">Hill Climb Racing</p>
+
+      <div class="mode-select">
+        <button class="mode-btn" id="singlePlayerBtn">
+          <div class="mode-icon">🏁</div>
+          <div class="mode-label">Single Player</div>
+          <div class="mode-desc">Race solo for distance</div>
+        </button>
+        <button class="mode-btn" id="multiPlayerBtn">
+          <div class="mode-icon">👥</div>
+          <div class="mode-label">Multiplayer</div>
+          <div class="mode-desc">Race with friends online</div>
+        </button>
+      </div>
+
+      <div class="menu-stats">
+        <div class="stat">Best: <strong id="menuBest">0m</strong></div>
+        <div class="stat">Stars: <strong id="menuCoins">0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VEHICLE SELECT ===== -->
+  <div id="vehicleScreen" class="hidden">
+    <div class="menu-content">
+      <h2 class="screen-title">Choose Your Ride</h2>
+      <div class="name-input-group">
+        <label for="playerNameInput">Your Name</label>
+        <input type="text" id="playerNameInput" maxlength="15" placeholder="Enter your name" value="Player" autocomplete="off" />
+      </div>
+      <div class="vehicle-select">
+        <button class="vehicle-btn active" data-vehicle="truck">
+          <div class="vehicle-preview truck-preview"></div>
+          <span>Monster Truck</span>
+        </button>
+        <button class="vehicle-btn" data-vehicle="jeep">
+          <div class="vehicle-preview jeep-preview"></div>
+          <span>Off-Road Jeep</span>
+        </button>
+      </div>
+      <button id="startGameBtn" class="play-btn">
+        <span>START</span>
+        <div class="play-btn-shine"></div>
+      </button>
+      <button class="back-link" id="vehicleBackBtn">← Back</button>
+    </div>
+  </div>
+
+  <!-- ===== MULTIPLAYER LOBBY ===== -->
+  <div id="lobbyScreen" class="hidden">
+    <div class="menu-content">
+      <h2 class="screen-title">Multiplayer</h2>
+      <div class="lobby-options">
+        <button class="mode-btn" id="createRoomBtn">
+          <div class="mode-icon">➕</div>
+          <div class="mode-label">Create Room</div>
+          <div class="mode-desc">Start a new room & invite friends</div>
+        </button>
+        <button class="mode-btn" id="joinRoomBtn">
+          <div class="mode-icon">🔗</div>
+          <div class="mode-label">Join Room</div>
+          <div class="mode-desc">Enter a room code to join</div>
+        </button>
+      </div>
+      <button class="back-link" id="lobbyBackBtn">← Back to Menu</button>
+    </div>
+  </div>
+
+  <!-- ===== JOIN ROOM ===== -->
+  <div id="joinScreen" class="hidden">
+    <div class="menu-content">
+      <h2 class="screen-title">Join Room</h2>
+      <div class="name-input-group">
+        <label for="roomCodeInput">Room Code</label>
+        <input type="text" id="roomCodeInput" maxlength="5" placeholder="XXXXX" autocomplete="off" style="text-transform:uppercase; letter-spacing:8px; font-size:28px;" />
+      </div>
+      <div id="joinError" class="error-msg" style="display:none"></div>
+      <button id="confirmJoinBtn" class="play-btn" style="margin-top:16px;">
+        <span>JOIN</span>
+      </button>
+      <button class="back-link" id="joinBackBtn">← Back</button>
+    </div>
+  </div>
+
+  <!-- ===== ROOM WAITING ===== -->
+  <div id="roomScreen" class="hidden">
+    <div class="menu-content">
+      <h2 class="screen-title">Game Lobby</h2>
+      <div class="room-code-display">
+        <div class="room-code-label">Share this code with friends</div>
+        <div class="room-code" id="displayRoomCode">-----</div>
+        <button class="copy-btn" id="copyCodeBtn">📋 Copy Code</button>
+      </div>
+
+      <div class="player-list" id="playerList">
+        <!-- Players rendered by JS -->
+      </div>
+
+      <div class="name-input-group" style="margin-top:14px;">
+        <label for="roomNameInput">Your Name</label>
+        <input type="text" id="roomNameInput" maxlength="15" placeholder="Enter your name" value="Player" autocomplete="off" />
+      </div>
+      <div class="vehicle-select" style="margin-top:10px;">
+        <button class="vehicle-btn active" data-vehicle="truck">
+          <div class="vehicle-preview truck-preview"></div>
+          <span>Monster Truck</span>
+        </button>
+        <button class="vehicle-btn" data-vehicle="jeep">
+          <div class="vehicle-preview jeep-preview"></div>
+          <span>Off-Road Jeep</span>
+        </button>
+      </div>
+
+      <div class="lobby-actions" style="margin-top:14px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <button id="readyBtn" class="ready-btn">✋ READY</button>
+        <button id="roomStartBtn" class="play-btn start-btn" disabled>
+          <span>START GAME</span>
+        </button>
+      </div>
+      <div id="startHint" class="start-hint">All players must be ready to start</div>
+      <button class="back-link" id="roomBackBtn">← Leave Room</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME OVER ===== -->
+  <div id="gameOverScreen" class="hidden">
+    <div class="gameover-content">
+      <h2 class="gameover-title" id="gameOverTitle">WRECKED!</h2>
+      <div class="gameover-stats">
+        <div class="go-stat">
+          <span class="go-label">Distance</span>
+          <span class="go-value" id="goDistance">0m</span>
+        </div>
+        <div class="go-stat">
+          <span class="go-label">Stars</span>
+          <span class="go-value" id="goCoins">0</span>
+        </div>
+        <div class="go-stat best-stat" id="newBestStat" style="display:none">
+          <span class="go-label">🏆 NEW BEST!</span>
+          <span class="go-value" id="goBest">0m</span>
+        </div>
+      </div>
+      <button id="retryBtn" class="play-btn retry-btn"><span>RETRY</span></button>
+      <button id="menuBtn" class="menu-back-btn">MAIN MENU</button>
+    </div>
+  </div>
+
+  <button id="pauseBtn" class="pause-btn hidden">⏸</button>
+  <script src="game.js"></script>
+</body>
+</html>

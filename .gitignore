@@ -1,0 +1,8 @@
+node_modules/
+android/
+www/
+.gradle/
+*.apk
+build/
+.idea/
+*.iml

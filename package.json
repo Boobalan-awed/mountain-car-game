@@ -1,0 +1,19 @@
+{
+  "name": "mountain-car-game",
+  "version": "1.0.0",
+  "description": "Mountain Car - Multiplayer Hill Climb Racing Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build:web": "xcopy /Y index.html www\\ && xcopy /Y style.css www\\ && xcopy /Y game.js www\\",
+    "build:android": "npm run build:web && npx cap sync android && npx cap open android",
+    "build:apk": "build-apk.bat"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "ws": "^8.16.0"
+  }
+}
