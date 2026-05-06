@@ -18,15 +18,16 @@ function startGame(){
   resetGame();gameState='playing';hideAllScreens();
   document.getElementById('hud').classList.remove('hidden');
   document.getElementById('pauseBtn').classList.remove('hidden');
+  document.getElementById('muteBtn').classList.remove('hidden');
   document.getElementById('heightHud').style.display=gameMode==='jump'?'flex':'none';
   document.getElementById('blocksHud').style.display=gameMode==='crack'?'flex':'none';
   document.getElementById('dinoHud').style.display=gameMode==='dino'?'flex':'none';
   document.getElementById('onlineHud').style.display='none';
-  // Show/hide jump button
   const jb=document.getElementById('jumpCtrlBtn');
   if(gameMode==='dino'){jb.classList.remove('hidden');}else{jb.classList.add('hidden');}
-  // Hide fuel bar in dino mode (infinite)
   document.querySelector('.fuel-container').style.display=gameMode==='dino'?'none':'flex';
+  // Audio
+  initAudio();resumeAudio();startMusic();startEngineSound();
 }
 
 function endGame(reason){
@@ -51,7 +52,12 @@ function endGame(reason){
   document.getElementById('gameOverScreen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('pauseBtn').classList.add('hidden');
+  document.getElementById('muteBtn').classList.add('hidden');
   document.getElementById('jumpCtrlBtn').classList.add('hidden');
+  // Audio
+  stopMusic();stopEngineSound();
+  if(reason==='barricade'||reason==='flip')sfxCrash(); else sfxGameOver();
+  sfxGameOver();
 }
 
 function showMenu(){
@@ -129,6 +135,8 @@ function gameLoop(){
     ensureCollectibles();ensureStructures();
     if(gameMode==='crack'){ensureBuildings();updateBlocks();}
     if(++sendCounter%3===0)sendUpdate();
+    // Engine sound
+    updateEngineSound(car.vx);
   }
   ctx.clearRect(0,0,canvas.width,canvas.height);
   if(gameState==='playing'||gameState==='paused'||gameState==='gameover'){
@@ -249,11 +257,39 @@ document.getElementById('retryBtn').addEventListener('click',startGame);
 document.getElementById('menuBtn').addEventListener('click',showMenu);
 
 // Pause
-document.getElementById('pauseBtn').addEventListener('click',()=>{if(gameState==='playing'){gameState='paused';document.getElementById('pauseMenu').classList.remove('hidden');}});
-document.getElementById('resumeBtn').addEventListener('click',()=>{gameState='playing';document.getElementById('pauseMenu').classList.add('hidden');});
-document.getElementById('pauseExitBtn').addEventListener('click',()=>{document.getElementById('pauseMenu').classList.add('hidden');showMenu();});
+document.getElementById('pauseBtn').addEventListener('click',()=>{if(gameState==='playing'){gameState='paused';document.getElementById('pauseMenu').classList.remove('hidden');stopMusic();}});
+document.getElementById('resumeBtn').addEventListener('click',()=>{gameState='playing';document.getElementById('pauseMenu').classList.add('hidden');startMusic();sfxClick();});
+document.getElementById('pauseExitBtn').addEventListener('click',()=>{document.getElementById('pauseMenu').classList.add('hidden');stopMusic();stopEngineSound();showMenu();sfxClick();});
+
+// Sound toggles
+document.getElementById('toggleMusicBtn').addEventListener('click',()=>{
+  const on=toggleMusic();
+  document.getElementById('toggleMusicBtn').textContent=on?'🎵 Music: ON':'🎵 Music: OFF';
+  sfxClick();
+});
+document.getElementById('toggleSfxBtn').addEventListener('click',()=>{
+  const on=toggleSound();
+  document.getElementById('toggleSfxBtn').textContent=on?'🔊 SFX: ON':'🔊 SFX: OFF';
+});
+document.getElementById('muteBtn').addEventListener('click',()=>{
+  const btn=document.getElementById('muteBtn');
+  if(soundEnabled||musicEnabled){
+    soundEnabled=false;musicEnabled=false;stopMusic();stopEngineSound();
+    btn.textContent='🔇';
+  }else{
+    soundEnabled=true;musicEnabled=true;startMusic();startEngineSound();
+    btn.textContent='🔊';
+  }
+});
 
 // === INIT ===
 document.getElementById('roomNameInput').value=playerName;
 populateMapSelect();
 showMenu();connectMP();gameLoop();
+
+// Global click SFX for UI
+document.addEventListener('click', e => {
+  if(e.target.closest('button:not(.ctrl-btn)') || e.target.closest('.veh-dot') || e.target.closest('.map-card')) {
+    if(typeof sfxClick==='function')sfxClick();
+  }
+});

@@ -260,6 +260,7 @@ function updateCar(){
       const n=((la%(Math.PI*2))+Math.PI*3)%(Math.PI*2)-Math.PI;
       if(Math.abs(n)>Math.PI*.5){endGame('flip');return;}
       car.angle=ga;car.vy=0;spawnDust(car.x,gY);spawnDust(car.x-20,gY);spawnDust(car.x+20,gY);
+      if(typeof sfxLand==='function')sfxLand();
     }
     car.onGround=true;car.angularVel=0;
   }
@@ -269,7 +270,11 @@ function updateCar(){
   for(const c of collectibles){
     if(c.collected)continue;
     const dx=car.x-c.x,dy=(car.y-20)-c.y;
-    if(dx*dx+dy*dy<1800){c.collected=true;if(c.type==='coin'){sessionCoins++;spawnStars(c.x,c.y);}else{fuel=Math.min(100,fuel+25);spawnStars(c.x,c.y);}}
+    if(dx*dx+dy*dy<1800){
+      c.collected=true;
+      if(c.type==='coin'){sessionCoins++;spawnStars(c.x,c.y);if(typeof sfxCoin==='function')sfxCoin();}
+      else{fuel=Math.min(100,fuel+25);spawnStars(c.x,c.y);if(typeof sfxFuel==='function')sfxFuel();}
+    }
   }
   // Block collision
   if(gameMode==='crack')checkBlockCollision();
@@ -341,6 +346,7 @@ function updateDinoCar(){
       car.vy=-6-Math.min(dinoSpeed*0.15,2); // lower jump — just clears barricades
       car.vx=dinoSpeed;
       jumpPressed=false; // single jump
+      if(typeof sfxJump==='function')sfxJump();
     }
   }else{
     // Airborne
@@ -356,6 +362,7 @@ function updateDinoCar(){
   // Ground collision
   const gY=getTerrainY(car.x);
   if(car.y>=gY){
+    if(!car.onGround&&typeof sfxLand==='function')sfxLand();
     car.y=gY;car.onGround=true;car.vy=0;
     car.angle=getTerrainAngle(car.x);
     spawnDust(car.x,gY);
@@ -375,6 +382,7 @@ function updateDinoCar(){
     if(!b.passed&&car.x>b.x+b.w){
       b.passed=true;barricadesPassed++;
       sessionCoins++;spawnStars(b.x,b.y-b.h);
+      if(typeof sfxBarricadePass==='function')sfxBarricadePass();
     }
     // Collision box
     const bL=b.x-b.w/2,bR=b.x+b.w/2,bT=b.y-b.h;
@@ -390,7 +398,11 @@ function updateDinoCar(){
   for(const c of collectibles){
     if(c.collected)continue;
     const dx=car.x-c.x,dy=(car.y-20)-c.y;
-    if(dx*dx+dy*dy<1800){c.collected=true;if(c.type==='coin'){sessionCoins++;spawnStars(c.x,c.y);}else{fuel=Math.min(100,fuel+25);spawnStars(c.x,c.y);}}
+    if(dx*dx+dy*dy<1800){
+      c.collected=true;
+      if(c.type==='coin'){sessionCoins++;spawnStars(c.x,c.y);if(typeof sfxCoin==='function')sfxCoin();}
+      else{fuel=Math.min(100,fuel+25);spawnStars(c.x,c.y);if(typeof sfxFuel==='function')sfxFuel();}
+    }
   }
 }
 

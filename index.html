@@ -197,11 +197,17 @@
     <div class="pause-overlay">
       <h2 class="pause-title">⏸ PAUSED</h2>
       <button id="resumeBtn" class="play-btn"><span>▶ RESUME</span></button>
+      <div class="sound-toggles">
+        <button id="toggleMusicBtn" class="snd-btn">🎵 Music: ON</button>
+        <button id="toggleSfxBtn" class="snd-btn">🔊 SFX: ON</button>
+      </div>
       <button id="pauseExitBtn" class="menu-back-btn">🚪 EXIT</button>
     </div>
   </div>
 
   <button id="pauseBtn" class="pause-btn hidden">⏸</button>
+  <button id="muteBtn" class="mute-btn hidden">🔊</button>
+  <script src="audio.js"></script>
   <script src="engine.js"></script>
   <script src="draw.js"></script>
   <script src="ui.js"></script>
