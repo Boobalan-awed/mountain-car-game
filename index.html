@@ -194,8 +194,32 @@
         </div>
       </div>
       <button id="retryBtn" class="play-btn retry-btn"><span>RETRY</span></button>
+      <button id="spectateBtn" class="spectate-btn" style="display:none">👀 SPECTATE</button>
       <button id="menuBtn" class="menu-back-btn">MAIN MENU</button>
     </div>
+  </div>
+
+  <!-- ===== PAUSE MENU ===== -->
+  <div id="pauseMenu" class="hidden">
+    <div class="pause-overlay">
+      <h2 class="pause-title">⏸ PAUSED</h2>
+      <button id="resumeBtn" class="play-btn resume-btn"><span>▶ RESUME</span></button>
+      <button id="pauseExitBtn" class="menu-back-btn">🚪 EXIT TO MENU</button>
+    </div>
+  </div>
+
+  <!-- ===== SPECTATOR BAR ===== -->
+  <div id="spectatorBar" class="spectator-bar" style="display:none">
+    <button id="specPrev" class="spec-nav">◀</button>
+    <div class="spec-info">👀 Spectating: <strong id="spectatingName">Player</strong></div>
+    <button id="specNext" class="spec-nav">▶</button>
+    <button id="specExit" class="spec-exit">✕ Exit</button>
+  </div>
+
+  <!-- ===== ZOOM CONTROLS ===== -->
+  <div class="zoom-controls">
+    <button id="zoomInBtn" class="zoom-btn">🔍+</button>
+    <button id="zoomOutBtn" class="zoom-btn">🔍−</button>
   </div>
 
   <button id="pauseBtn" class="pause-btn hidden">⏸</button>

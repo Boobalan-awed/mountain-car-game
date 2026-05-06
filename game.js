@@ -37,6 +37,11 @@ let brakePressed = false;
 
 // ===== CAMERA =====
 const camera = { x: 0, y: 0 };
+let zoomLevel = 1;
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 1.5;
+let spectatingId = null;
+let isSpectating = false;
 
 const car = {
   x: 250, y: 0, vx: 0, vy: 0,
@@ -261,8 +266,15 @@ function updateCar() {
 
 // ===== CAMERA =====
 function updateCamera() {
-  const targetX = car.x - canvas.width * 0.35;
-  const targetY = car.y - canvas.height * 0.5;
+  let focusX, focusY;
+  if (isSpectating && spectatingId && otherPlayers[spectatingId]) {
+    const sp = otherPlayers[spectatingId];
+    focusX = sp.drawX; focusY = sp.drawY;
+  } else {
+    focusX = car.x; focusY = car.y;
+  }
+  const targetX = focusX - (canvas.width / zoomLevel) * 0.35;
+  const targetY = focusY - (canvas.height / zoomLevel) * 0.5;
   camera.x += (targetX - camera.x) * 0.08;
   camera.y += (targetY - camera.y) * 0.06;
 }
@@ -724,8 +736,12 @@ function renderLobbyPlayers(state) {
 }
 
 function sendUpdate() {
-  if (ws && ws.readyState === 1 && gameState === 'playing' && gameMode === 'multi') {
-    ws.send(JSON.stringify({ type:'update', name:playerName, x:Math.round(car.x), y:Math.round(car.y), angle:Math.round(car.angle*1000)/1000, vehicle:selectedVehicle, speed:Math.round(car.vx*10)/10, distance }));
+  if (ws && ws.readyState === 1 && gameMode === 'multi') {
+    if (gameState === 'playing') {
+      ws.send(JSON.stringify({ type:'update', name:playerName, x:Math.round(car.x), y:Math.round(car.y), angle:Math.round(car.angle*1000)/1000, vehicle:selectedVehicle, speed:Math.round(car.vx*10)/10, distance, alive:true }));
+    } else if (isSpectating) {
+      ws.send(JSON.stringify({ type:'update', name:playerName, x:Math.round(car.x), y:Math.round(car.y), angle:0, vehicle:selectedVehicle, speed:0, distance, alive:false }));
+    }
   }
 }
 
@@ -733,8 +749,12 @@ function sendUpdate() {
 function drawOtherPlayers() {
   for (const id in otherPlayers) {
     const p = otherPlayers[id];
-    const sx = p.drawX - camera.x;
-    const sy = p.drawY - camera.y;
+    // Ground the other player on terrain instead of using raw Y
+    const groundY = getTerrainY(p.drawX);
+    const groundAngle = getTerrainAngle(p.drawX);
+    const correctedY = Math.min(p.drawY, groundY);
+    const sx = (p.drawX - camera.x);
+    const sy = (correctedY - camera.y);
 
     // Skip if off-screen
     if (sx < -300 || sx > canvas.width + 300) continue;
@@ -860,6 +880,13 @@ function endGame(reason) {
   document.getElementById('goCoins').textContent = sessionCoins;
   document.getElementById('newBestStat').style.display = isNewBest ? 'flex' : 'none';
   document.getElementById('goBest').textContent = bestDistance + 'm';
+  // In multiplayer, offer spectate option
+  const spectateBtn = document.getElementById('spectateBtn');
+  if (gameMode === 'multi' && Object.keys(otherPlayers).length > 0) {
+    spectateBtn.style.display = 'block';
+  } else {
+    spectateBtn.style.display = 'none';
+  }
   document.getElementById('gameOverScreen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('pauseBtn').classList.add('hidden');
@@ -876,18 +903,63 @@ function showMenu() {
   document.getElementById('menuCoins').textContent = totalCoins;
 }
 
+// ===== SPECTATOR MODE =====
+function startSpectating() {
+  isSpectating = true;
+  const ids = Object.keys(otherPlayers).filter(id => otherPlayers[id].alive !== false);
+  spectatingId = ids.length > 0 ? ids[0] : Object.keys(otherPlayers)[0];
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('pauseBtn').classList.remove('hidden');
+  document.getElementById('spectatorBar').style.display = 'flex';
+  updateSpectatorName();
+}
+
+function cycleSpectate(dir) {
+  const ids = Object.keys(otherPlayers).filter(id => otherPlayers[id].alive !== false);
+  if (ids.length === 0) return;
+  let idx = ids.indexOf(spectatingId);
+  idx = (idx + dir + ids.length) % ids.length;
+  spectatingId = ids[idx];
+  updateSpectatorName();
+}
+
+function updateSpectatorName() {
+  const p = otherPlayers[spectatingId];
+  const el = document.getElementById('spectatingName');
+  if (el && p) el.textContent = p.name || 'Player';
+}
+
+function stopSpectating() {
+  isSpectating = false; spectatingId = null;
+  document.getElementById('spectatorBar').style.display = 'none';
+  showMenu();
+}
+
 // ===== MAIN LOOP =====
 function gameLoop() {
   if (gameState === 'playing') {
     gameTime += 0.016; updateCar(); updateSuspension(); updateCamera(); updateParticles(); ensureCollectibles();
     if (++sendCounter % 3 === 0) sendUpdate();
+  } else if (isSpectating) {
+    updateCamera(); updateParticles();
+    if (++sendCounter % 3 === 0) sendUpdate();
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameover') {
+  if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameover' || isSpectating) {
+    ctx.save();
+    ctx.scale(zoomLevel, zoomLevel);
     drawBackground(); drawTerrain(); drawCollectibles();
     if (gameMode === 'multi') drawOtherPlayers();
-    drawCar(); drawParticles();
+    if (!isSpectating) drawCar();
+    drawParticles();
+    ctx.restore();
     if (gameState === 'playing') updateHUD();
+    // Draw spectator HUD
+    if (isSpectating && spectatingId && otherPlayers[spectatingId]) {
+      const sp = otherPlayers[spectatingId];
+      document.getElementById('distValue').textContent = (sp.distance || 0) + 'm';
+    }
   }
   requestAnimationFrame(gameLoop);
 }
@@ -968,12 +1040,62 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
 });
 
 // Game over
-document.getElementById('retryBtn').addEventListener('click', startGame);
-document.getElementById('menuBtn').addEventListener('click', showMenu);
+document.getElementById('retryBtn').addEventListener('click', () => { isSpectating = false; startGame(); });
+document.getElementById('menuBtn').addEventListener('click', () => { isSpectating = false; showMenu(); });
+document.getElementById('spectateBtn').addEventListener('click', startSpectating);
+
+// Pause menu
 document.getElementById('pauseBtn').addEventListener('click', () => {
-  gameState = gameState === 'paused' ? 'playing' : 'paused';
-  document.getElementById('pauseBtn').textContent = gameState === 'paused' ? '▶' : '⏸';
+  if (isSpectating) { stopSpectating(); return; }
+  if (gameState === 'playing') {
+    gameState = 'paused';
+    document.getElementById('pauseMenu').classList.remove('hidden');
+  }
 });
+document.getElementById('resumeBtn').addEventListener('click', () => {
+  gameState = 'playing';
+  document.getElementById('pauseMenu').classList.add('hidden');
+});
+document.getElementById('pauseExitBtn').addEventListener('click', () => {
+  document.getElementById('pauseMenu').classList.add('hidden');
+  showMenu();
+});
+
+// Zoom controls
+document.getElementById('zoomInBtn').addEventListener('click', () => {
+  zoomLevel = Math.min(ZOOM_MAX, zoomLevel + 0.15);
+});
+document.getElementById('zoomOutBtn').addEventListener('click', () => {
+  zoomLevel = Math.max(ZOOM_MIN, zoomLevel - 0.15);
+});
+
+// Spectator navigation
+document.getElementById('specPrev').addEventListener('click', () => cycleSpectate(-1));
+document.getElementById('specNext').addEventListener('click', () => cycleSpectate(1));
+document.getElementById('specExit').addEventListener('click', stopSpectating);
+
+// Pinch to zoom (mobile)
+let lastPinchDist = 0;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (lastPinchDist > 0) {
+      const scale = dist / lastPinchDist;
+      zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel * scale));
+    }
+    lastPinchDist = dist;
+  }
+}, { passive: true });
+canvas.addEventListener('touchend', () => { lastPinchDist = 0; }, { passive: true });
 
 // Vehicle selection (works on both screens)
 document.querySelectorAll('.vehicle-btn').forEach(btn => {

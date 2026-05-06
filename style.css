@@ -260,3 +260,63 @@ canvas { display: block; width: 100vw; height: 100vh; }
   .mode-btn { padding: 10px 16px; }
   .mode-icon { font-size: 22px; margin-bottom: 4px; }
 }
+
+/* ===== PAUSE MENU ===== */
+#pauseMenu {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; z-index: 150;
+}
+.pause-overlay { text-align: center; }
+.pause-title {
+  font-family: 'Outfit', sans-serif; font-size: 42px; font-weight: 900;
+  color: #fff; margin-bottom: 28px; text-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+.resume-btn { margin-bottom: 16px; }
+
+/* ===== ZOOM CONTROLS ===== */
+.zoom-controls {
+  position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 60;
+}
+.zoom-btn {
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+  color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; font-family: 'Outfit', sans-serif;
+}
+.zoom-btn:hover, .zoom-btn:active { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+
+/* ===== SPECTATOR BAR ===== */
+.spectator-bar {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px; z-index: 60;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,215,61,0.3); border-radius: 30px; padding: 8px 18px;
+}
+.spec-info { color: rgba(255,255,255,0.8); font-size: 14px; font-family: 'Outfit', sans-serif; font-weight: 600; }
+.spec-info strong { color: #ffd93d; }
+.spec-nav {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; font-family: 'Outfit', sans-serif;
+}
+.spec-nav:hover { background: rgba(255,255,255,0.2); }
+.spec-exit {
+  background: rgba(255,80,80,0.2); border: 1px solid rgba(255,80,80,0.4);
+  border-radius: 16px; padding: 4px 14px; color: #ff6b6b; font-size: 12px;
+  font-weight: 700; font-family: 'Outfit', sans-serif; cursor: pointer;
+  transition: all 0.2s;
+}
+.spec-exit:hover { background: rgba(255,80,80,0.4); color: #fff; }
+
+/* ===== SPECTATE BUTTON ===== */
+.spectate-btn {
+  background: rgba(255,215,61,0.15); border: 2px solid rgba(255,215,61,0.4);
+  border-radius: 50px; padding: 12px 28px; font-family: 'Outfit', sans-serif;
+  font-size: 16px; font-weight: 800; color: #ffd93d; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s; margin-bottom: 10px;
+}
+.spectate-btn:hover { background: rgba(255,215,61,0.25); box-shadow: 0 0 20px rgba(255,215,61,0.2); }
