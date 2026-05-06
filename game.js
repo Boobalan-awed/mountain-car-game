@@ -1061,13 +1061,6 @@ document.getElementById('pauseExitBtn').addEventListener('click', () => {
   showMenu();
 });
 
-// Zoom controls
-document.getElementById('zoomInBtn').addEventListener('click', () => {
-  zoomLevel = Math.min(ZOOM_MAX, zoomLevel + 0.15);
-});
-document.getElementById('zoomOutBtn').addEventListener('click', () => {
-  zoomLevel = Math.max(ZOOM_MIN, zoomLevel - 0.15);
-});
 
 // Spectator navigation
 document.getElementById('specPrev').addEventListener('click', () => cycleSpectate(-1));
