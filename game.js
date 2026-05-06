@@ -649,7 +649,7 @@ function updateHUD() {
 // ===== MULTIPLAYER NETWORKING =====
 // Set this to your deployed server URL for online play (e.g., 'wss://mountain-car.onrender.com')
 // Leave empty to auto-detect (works for local dev and same-origin deployment)
-const SERVER_URL = '';
+const SERVER_URL = 'wss://mountain-car-game.onrender.com';
 
 let isHost = false;
 let isReady = false;
